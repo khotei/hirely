@@ -1,14 +1,28 @@
 import { join } from "path"
 
 import {
-  type GenerateOptions,
-  GraphQLDefinitionsFactory,
-} from "@nestjs/graphql"
+  type CodegenConfig,
+  generate,
+} from "@graphql-codegen/cli"
 
-const definitionsFactory = new GraphQLDefinitionsFactory()
-const definitionsConfig: GenerateOptions = {
-  path: join(__dirname, "../../__generated__/schema.ts"),
-  typePaths: [join(__dirname, "../../web/**/*.gql")],
+const reqGenConfig: CodegenConfig = {
+  documents: join(__dirname, "../../web/**/*.gql"),
+  generates: {
+    [join(__dirname, "../../__generated__/schema.ts")]: {
+      config: {
+        enumsAsTypes: true,
+        skipTypename: true,
+        useIndexSignature: true,
+      },
+      plugins: [
+        "typescript",
+        "typescript-resolvers",
+        "typescript-operations",
+        "typescript-generic-sdk",
+      ],
+    },
+  },
+  schema: join(__dirname, "../../web/**/*.gql"),
 }
 
-definitionsFactory.generate(definitionsConfig)
+generate(reqGenConfig)

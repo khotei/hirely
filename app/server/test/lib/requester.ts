@@ -1,14 +1,16 @@
 import { INestApplication } from "@nestjs/common"
 import * as request from "supertest"
 
-import { Requester } from "@/__generated__/gql-sdk"
+import { Requester } from "@/__generated__/schema"
 
 export const createRequester = (
-  app: INestApplication
+  app: INestApplication,
+  { token }: { token?: string } = {}
 ): Requester => {
   return async (doc, vars) => {
     const response = await request(app.getHttpServer())
       .post("/graphql")
+      .set("Authorization", `Bearer ${token}`)
       .send({
         query: doc.loc?.source.body,
         variables: vars,

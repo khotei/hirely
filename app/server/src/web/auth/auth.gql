@@ -1,25 +1,51 @@
 type Query {
-    auth: User!
+    auth: Auth!
 }
 
 type Mutation {
-    register(input: RegisterInput!): User!
+    register(input: RegisterInput!): Auth!
+    login(input: LoginInput!): Auth!
+}
+
+type Auth {
+    token: String!
+    user: User!
 }
 
 input RegisterInput {
     email: String!
+    role: UserRole!
 }
 
-# Document
+input LoginInput {
+    email: String!
+}
+
+# Documents
 
 query Auth {
     auth {
-        ...User
+        token
+        user {
+            ...User
+        }
     }
 }
 
 mutation Register ($input: RegisterInput!) {
     register(input: $input) {
-        ...User
+        token
+        user {
+            ...User
+        }
+    }
+}
+
+mutation Login ($input: LoginInput!) {
+    login(input: $input) {
+        token
+        user {
+            ...User
+        }
     }
 }
