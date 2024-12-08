@@ -1,0 +1,25 @@
+type Query {
+    auth: User!
+}
+
+type Mutation {
+    register(input: RegisterInput!): User!
+}
+
+input RegisterInput {
+    email: String!
+}
+
+# Document
+
+query Auth {
+    auth {
+        ...User
+    }
+}
+
+mutation Register ($input: RegisterInput!) {
+    register(input: $input) {
+        ...User
+    }
+}

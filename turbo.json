@@ -1,0 +1,24 @@
+{
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "cache": false,
+      "dependsOn": ["codegen"]
+    },
+    "type-check": {
+      "cache": false
+    },
+    "lint": {
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    },
+    "codegen": {
+      "cache": false
+    }
+  }
+}

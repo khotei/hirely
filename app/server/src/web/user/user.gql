@@ -1,0 +1,18 @@
+type User {
+    id: ID!
+    email: String!
+    role: UserRole!
+}
+
+enum UserRole {
+    HR
+    CANDIDATE
+}
+
+# Documents
+
+fragment User on User {
+    id
+    email
+    role
+}
