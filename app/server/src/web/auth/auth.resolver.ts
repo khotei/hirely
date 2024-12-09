@@ -6,9 +6,9 @@ import {
   Resolver,
 } from "@nestjs/graphql"
 import { JwtService } from "@nestjs/jwt"
+import type { User } from "@prisma/client"
 import { GraphQLError } from "graphql/error"
 
-import { User } from "@/__generated__/prisma-client"
 import {
   type LoginInput,
   type MutationResolvers,

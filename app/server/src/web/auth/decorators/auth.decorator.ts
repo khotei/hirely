@@ -3,8 +3,7 @@ import {
   type ExecutionContext,
 } from "@nestjs/common"
 import { GqlExecutionContext } from "@nestjs/graphql"
-
-import { User } from "@/__generated__/prisma-client"
+import { User } from "@prisma/client"
 
 export type AuthPayload = { userId: User["id"] } & Pick<
   User,

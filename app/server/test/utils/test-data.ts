@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker"
 import type { INestApplication } from "@nestjs/common"
+import { UserRole } from "@prisma/client"
 
-import { UserRole } from "@/__generated__/prisma-client"
 import {
   getSdk,
   RegisterInput,
