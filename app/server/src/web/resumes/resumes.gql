@@ -1,0 +1,116 @@
+extend type Query {
+  resume(input: ResumeInput!): ResumeResult!
+  resumes(input: ResumesInput): ResumesResult!
+}
+
+extend type Mutation {
+  createResume(input: CreateResumeInput!): ResumeResult!
+  updateResume(input: UpdateResumeInput!): ResumeResult!
+  deleteResume(input: DeleteResumeInput!): ResumeResult!
+}
+
+type Resume {
+  id: ID!
+  title: String!
+  description: String!
+  salary: Float!
+  authorId: ID!
+  author: User!
+}
+
+type ResumeResult {
+  resume: Resume!
+}
+
+type ResumesResult {
+  resumes: [Resume!]!
+  pagination: PaginationResult!
+}
+
+type PaginationResult {
+  page: Int!
+  nextPage: Int
+}
+
+input ResumeInput {
+  id: ID!
+}
+
+input ResumesInput {
+  id: [ID]
+  pagination: Pagination
+}
+
+input Pagination {
+  page: Int
+}
+
+input CreateResumeInput {
+  title: String!
+  description: String!
+  salary: Float!
+}
+
+input UpdateResumeInput {
+  id: ID!
+  title: String
+  description: String
+  salary: Float
+}
+
+input DeleteResumeInput {
+  id: ID!
+}
+
+# Documents
+
+fragment Resume on Resume {
+  id
+  title
+  description
+  salary
+  authorId
+  author {
+    ...User
+  }
+}
+
+query Resume ($input: ResumeInput!) {
+  resume(input: $input) {
+    resume {
+      ...Resume
+    }
+  }
+}
+
+query Resumes ($input: ResumesInput) {
+  resumes(input: $input) {
+    resumes {
+      ...Resume
+    }
+  }
+}
+
+mutation CreateResume ($input: CreateResumeInput!) {
+  createResume(input: $input) {
+    resume {
+      ...Resume
+    }
+  }
+}
+
+mutation UpdateResume ($input: UpdateResumeInput!) {
+  updateResume(input: $input) {
+    resume {
+      ...Resume
+    }
+  }
+}
+
+mutation DeleteResume ($input: DeleteResumeInput!) {
+  deleteResume(input: $input) {
+    resume {
+      ...Resume
+    }
+  }
+}

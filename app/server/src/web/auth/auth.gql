@@ -1,8 +1,8 @@
-type Query {
+extend type Query {
   session: Session!
 }
 
-type Mutation {
+extend type Mutation {
   register(input: RegisterInput!): Session!
   login(input: LoginInput!): Session!
 }

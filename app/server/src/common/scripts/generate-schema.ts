@@ -10,6 +10,8 @@ const reqGenConfig: CodegenConfig = {
   generates: {
     [join(__dirname, "../../__generated__/schema.ts")]: {
       config: {
+        customResolverFn:
+          "(...args: any[]) => Promise<TResult> | TResult",
         enumsAsTypes: true,
         skipTypename: true,
         useIndexSignature: true,

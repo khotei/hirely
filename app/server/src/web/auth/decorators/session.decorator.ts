@@ -5,16 +5,16 @@ import {
 import { GqlExecutionContext } from "@nestjs/graphql"
 import { User } from "@prisma/client"
 
-export type AuthPayload = { userId: User["id"] } & Pick<
+export type SessionPayload = { userId: User["id"] } & Pick<
   User,
   "role"
 >
 
-export const Auth = createParamDecorator(
+export const Session = createParamDecorator(
   (
     data: unknown,
     context: ExecutionContext
-  ): AuthPayload => {
+  ): SessionPayload => {
     const ctx = GqlExecutionContext.create(context)
     const { auth } = ctx.getContext().req
 

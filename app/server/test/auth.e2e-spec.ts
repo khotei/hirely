@@ -1,12 +1,18 @@
 import { INestApplication } from "@nestjs/common"
 import { Test, TestingModule } from "@nestjs/testing"
 
-import { getSdk, type User } from "@/__generated__/schema"
+import {
+  getSdk,
+  SessionFragment,
+} from "@/__generated__/schema"
 import { AppModule } from "@/app.module"
 import { PrismaService } from "@/common/services/prisma.service"
 
 import { createRequester } from "./lib/requester"
-import { expectSession } from "./utils/test-asserts"
+import {
+  expectError,
+  expectSession,
+} from "./utils/test-asserts"
 import {
   createRegisterInput,
   registerTestUser,
@@ -71,42 +77,43 @@ describe("AuthResolver (e2e)", () => {
     })
 
     it("throw error when user not found", async () => {
-      await expect(
-        getSdk(createRequester(app)).Login({
-          input: { email: "not-existed@email.com" },
-        })
-      ).rejects.toThrow(/user not found/iu)
+      await expectError({
+        exec: () =>
+          getSdk(createRequester(app)).Login({
+            input: { email: "not-existed@email.com" },
+          }),
+        message: "not found",
+      })
     })
   })
 
   describe("Query", () => {
-    let token: string
-    let user: User
+    let testSession: SessionFragment
 
     beforeEach(async () => {
-      const register = await registerTestUser({ app })
-
-      ;({ token, user } = register)
+      testSession = await registerTestUser({ app })
     })
 
     describe("auth", () => {
       it("return authenticated user", async () => {
         const { session } = await getSdk(
-          createRequester(app, { token })
+          createRequester(app, { token: testSession.token })
         ).Session()
 
         expectSession({
           actual: session,
           expected: {
-            user,
+            user: testSession.user,
           },
         })
       })
 
       it("throw error when token is not provided", async () => {
-        await expect(
-          getSdk(createRequester(app)).Session()
-        ).rejects.toThrow(/unauthorized/iu)
+        await expectError({
+          exec: () =>
+            getSdk(createRequester(app)).Session(),
+          message: "unauthorized",
+        })
       })
     })
   })

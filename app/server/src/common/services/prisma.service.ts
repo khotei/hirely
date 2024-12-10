@@ -11,7 +11,10 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   cleanTables() {
-    return Promise.all([this.user.deleteMany()])
+    return Promise.all([
+      this.user.deleteMany(),
+      this.resume.deleteMany(),
+    ])
   }
 
   onModuleDestroy() {

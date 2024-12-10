@@ -17,11 +17,11 @@ import {
 } from "@/__generated__/schema"
 import { PrismaService } from "@/common/services/prisma.service"
 import {
-  Auth,
-  type AuthPayload,
-} from "@/web/auth/decorators/auth.decorator"
+  Session,
+  type SessionPayload,
+} from "@/web/auth/decorators/session.decorator"
 import { Token } from "@/web/auth/decorators/token.decorator"
-import { JwtAuthGuard } from "@/web/auth/guards/jwt-auth.guard"
+import { JwtSessionGuard } from "@/web/auth/guards/jwt-session.guard"
 import { JWT_SECRET } from "@/web/auth/lib/jwt.constants"
 
 type Resolvers = Required<
@@ -37,7 +37,7 @@ export class AuthResolver implements Resolvers {
   ) {}
 
   async generateToken({ user }: { user: User }) {
-    const jwtPayload: AuthPayload = {
+    const jwtPayload: SessionPayload = {
       role: user.role,
       userId: user.id,
     }
@@ -85,10 +85,10 @@ export class AuthResolver implements Resolvers {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtSessionGuard)
   @Query()
   async session(
-    @Auth() auth: AuthPayload,
+    @Session() auth: SessionPayload,
     @Token() token: string
   ) {
     const user = await this.prismaService.user.findUnique({
