@@ -1,51 +1,49 @@
 type Query {
-    auth: Auth!
+  session: Session!
 }
 
 type Mutation {
-    register(input: RegisterInput!): Auth!
-    login(input: LoginInput!): Auth!
+  register(input: RegisterInput!): Session!
+  login(input: LoginInput!): Session!
 }
 
-type Auth {
-    token: String!
-    user: User!
+type Session {
+  token: String!
+  user: User!
 }
 
 input RegisterInput {
-    email: String!
-    role: UserRole!
+  email: String!
+  role: UserRole!
 }
 
 input LoginInput {
-    email: String!
+  email: String!
 }
 
 # Documents
 
-query Auth {
-    auth {
-        token
-        user {
-            ...User
-        }
-    }
+fragment Session on Session {
+  token
+  user {
+    ...User
+  }
+}
+
+query Session {
+  session {
+    ...Session
+  }
 }
 
 mutation Register ($input: RegisterInput!) {
-    register(input: $input) {
-        token
-        user {
-            ...User
-        }
-    }
+  register(input: $input) {
+    ...Session
+  }
 }
 
 mutation Login ($input: LoginInput!) {
-    login(input: $input) {
-        token
-        user {
-            ...User
-        }
-    }
+  login(input: $input) {
+    ...Session
+  }
 }

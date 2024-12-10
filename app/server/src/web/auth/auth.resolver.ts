@@ -26,37 +26,15 @@ import { JWT_SECRET } from "@/web/auth/lib/jwt.constants"
 
 type Resolvers = Required<
   Pick<MutationResolvers, "login" | "register"> &
-    Pick<QueryResolvers, "auth">
+    Pick<QueryResolvers, "session">
 >
 
-@Resolver("Auth")
+@Resolver()
 export class AuthResolver implements Resolvers {
   constructor(
     private prismaService: PrismaService,
     private jwtService: JwtService
   ) {}
-
-  @UseGuards(JwtAuthGuard)
-  @Query()
-  async auth(
-    @Auth() auth: AuthPayload,
-    @Token() token: string
-  ) {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        id: auth.userId,
-      },
-    })
-
-    if (!user) {
-      throw new Error("Can't find authenticated user.")
-    }
-
-    return {
-      token,
-      user,
-    }
-  }
 
   async generateToken({ user }: { user: User }) {
     const jwtPayload: AuthPayload = {
@@ -100,6 +78,28 @@ export class AuthResolver implements Resolvers {
       data: input,
     })
     const { token } = await this.generateToken({ user })
+
+    return {
+      token,
+      user,
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query()
+  async session(
+    @Auth() auth: AuthPayload,
+    @Token() token: string
+  ) {
+    const user = await this.prismaService.user.findUnique({
+      where: {
+        id: auth.userId,
+      },
+    })
+
+    if (!user) {
+      throw new Error("Can't find authenticated user.")
+    }
 
     return {
       token,

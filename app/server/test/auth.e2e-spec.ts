@@ -90,11 +90,11 @@ describe("AuthResolver (e2e)", () => {
 
     describe("auth", () => {
       it("return authenticated user", async () => {
-        const { auth } = await getSdk(
+        const { session } = await getSdk(
           createRequester(app, { token })
-        ).Auth()
+        ).Session()
 
-        expect(auth).toEqual({
+        expect(session).toEqual({
           token: expect.any(String),
           user: {
             email: user.email,
@@ -106,7 +106,7 @@ describe("AuthResolver (e2e)", () => {
 
       it("throw error when token is not provided", async () => {
         await expect(
-          getSdk(createRequester(app)).Auth()
+          getSdk(createRequester(app)).Session()
         ).rejects.toThrow(/unauthorized/iu)
       })
     })
