@@ -24,12 +24,7 @@ type ResumeResult {
 
 type ResumesResult {
   resumes: [Resume!]!
-  pagination: PaginationResult!
-}
-
-type PaginationResult {
-  page: Int!
-  nextPage: Int
+  pagination: Pagination!
 }
 
 input ResumeInput {
@@ -38,11 +33,7 @@ input ResumeInput {
 
 input ResumesInput {
   id: [ID]
-  pagination: Pagination
-}
-
-input Pagination {
-  page: Int
+  pagination: PaginationInput
 }
 
 input CreateResumeInput {
@@ -87,6 +78,9 @@ query Resumes ($input: ResumesInput) {
   resumes(input: $input) {
     resumes {
       ...Resume
+    }
+    pagination {
+      ...Pagination
     }
   }
 }

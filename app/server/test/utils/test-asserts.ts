@@ -10,6 +10,23 @@ type DeepPartial<T> = T extends object
     }
   : T
 
+export const expectError = async <
+  R,
+  T extends () => Promise<R>,
+>({
+  exec,
+  message,
+}: {
+  exec: T
+  message: string
+}) => {
+  await expect(exec()).rejects.toThrow(
+    new RegExp(message, "iu")
+  )
+}
+
+// auth
+
 export const expectSession = ({
   actual,
   expected,
@@ -27,6 +44,8 @@ export const expectSession = ({
   })
 }
 
+// resumes
+
 export const expectResume = ({
   actual,
   author,
@@ -43,19 +62,4 @@ export const expectResume = ({
     author: author ?? expected.author,
     authorId: author?.id ?? expected.authorId,
   })
-}
-
-export const expectError = async <
-  R,
-  T extends () => Promise<R>,
->({
-  exec,
-  message,
-}: {
-  exec: T
-  message: string
-}) => {
-  await expect(exec()).rejects.toThrow(
-    new RegExp(message, "iu")
-  )
 }

@@ -1,12 +1,13 @@
-import { INestApplication } from "@nestjs/common"
+import { type INestApplication } from "@nestjs/common"
 import { Test, TestingModule } from "@nestjs/testing"
 
 import {
   getSdk,
-  SessionFragment,
+  type SessionFragment,
 } from "@/__generated__/schema"
 import { AppModule } from "@/app.module"
 import { PrismaService } from "@/common/services/prisma.service"
+import { PAGE_SIZE } from "@/web/common/lib/pagination"
 
 import { createRequester } from "./lib/requester"
 import {
@@ -319,7 +320,10 @@ describe("Resumes (e2e)", () => {
           })
 
         const {
-          resumes: { resumes },
+          resumes: {
+            pagination: { nextPage, page },
+            resumes,
+          },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
@@ -334,6 +338,45 @@ describe("Resumes (e2e)", () => {
         expect(resumes).toEqual(
           expect.arrayContaining(userResumes)
         )
+
+        expect(page).toEqual(1)
+        expect(nextPage).toBeNull()
+      })
+
+      it("returns valid pagination", async () => {
+        const {
+          resumes: {
+            pagination: firstPagePagination,
+            resumes: firstPageResumes,
+          },
+        } = await getSdk(
+          createRequester(app, {
+            token: testSession.token,
+          })
+        ).Resumes()
+
+        expect(firstPageResumes).toHaveLength(PAGE_SIZE)
+        expect(firstPagePagination.page).toEqual(1)
+        expect(firstPagePagination.nextPage).toEqual(2)
+
+        const {
+          resumes: { pagination: secondPagePagination },
+        } = await getSdk(
+          createRequester(app, {
+            token: testSession.token,
+          })
+        ).Resumes({
+          input: {
+            pagination: {
+              page: firstPagePagination.nextPage,
+            },
+          },
+        })
+
+        expect(secondPagePagination.page).toEqual(
+          firstPagePagination.nextPage
+        )
+        expect(secondPagePagination.nextPage).toEqual(null)
       })
     })
   })

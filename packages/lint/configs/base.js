@@ -23,6 +23,7 @@ export const base = tseslint.config(
       "init-declarations": "off",
       "new-cap": "off",
       "class-methods-use-this": "off",
+      "max-lines": "off",
       "@typescript-eslint/no-extraneous-class": "off",
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
     }

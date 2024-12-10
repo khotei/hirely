@@ -5,3 +5,19 @@ type Query {
 type Mutation {
   app: String
 }
+
+type Pagination {
+  page: Int!
+  nextPage: Int
+}
+
+input PaginationInput {
+  page: Int!
+}
+
+# Documents
+
+fragment Pagination on Pagination {
+  page
+  nextPage
+}

@@ -1,9 +1,9 @@
-import { INestApplication } from "@nestjs/common"
+import { type INestApplication } from "@nestjs/common"
 import { Test, TestingModule } from "@nestjs/testing"
 
 import {
   getSdk,
-  SessionFragment,
+  type SessionFragment,
 } from "@/__generated__/schema"
 import { AppModule } from "@/app.module"
 import { PrismaService } from "@/common/services/prisma.service"

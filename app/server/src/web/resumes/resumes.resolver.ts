@@ -22,6 +22,12 @@ import {
   type SessionPayload,
 } from "@/web/auth/decorators/session.decorator"
 import { JwtSessionGuard } from "@/web/auth/guards/jwt-session.guard"
+import {
+  calcNextPage,
+  calcPage,
+  calcSkip,
+  PAGE_SIZE,
+} from "@/web/common/lib/pagination"
 
 type Resolvers = Required<
   Pick<
@@ -115,9 +121,6 @@ export class ResumesResolver implements Resolvers {
     @Args("input")
     input?: ResumesInput
   ) {
-    const page = input?.pagination?.page ?? 1
-    const pageSize = 10
-
     const where: Prisma.ResumeWhereInput = {
       author: {
         id: session.userId,
@@ -127,11 +130,13 @@ export class ResumesResolver implements Resolvers {
       where.id = { in: input.id }
     }
 
+    const page = calcPage({ page: input?.pagination?.page })
+
     const resumes =
       await this.prismaService.resume.findMany({
         include: { author: true },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        skip: calcSkip({ page }),
+        take: PAGE_SIZE,
         where,
       })
 
@@ -139,11 +144,10 @@ export class ResumesResolver implements Resolvers {
       await this.prismaService.resume.count({
         where,
       })
-
-    // @todo: think how to improve to not count all pages
-    const totalPages = Math.ceil(totalCount / pageSize)
-    const nextPage =
-      page < totalPages ? page + 1 : undefined
+    const nextPage = calcNextPage({
+      page,
+      total: totalCount,
+    })
 
     return {
       pagination: {
