@@ -6,6 +6,7 @@ import { AppModule } from "@/app.module"
 import { PrismaService } from "@/common/services/prisma.service"
 
 import { createRequester } from "./lib/requester"
+import { expectSession } from "./utils/test-asserts"
 import {
   createRegisterInput,
   registerTestUser,
@@ -41,12 +42,10 @@ describe("AuthResolver (e2e)", () => {
           input: registerInput,
         })
 
-        expect(register).toEqual({
-          token: expect.any(String),
-          user: {
-            email: registerInput.email,
-            id: expect.any(String),
-            role: registerInput.role,
+        expectSession({
+          actual: register,
+          expected: {
+            user: registerInput,
           },
         })
       })
@@ -63,9 +62,11 @@ describe("AuthResolver (e2e)", () => {
         input: { email: user.email },
       })
 
-      expect(login).toEqual({
-        token: expect.any(String),
-        user,
+      expectSession({
+        actual: login,
+        expected: {
+          user,
+        },
       })
     })
 
@@ -94,12 +95,10 @@ describe("AuthResolver (e2e)", () => {
           createRequester(app, { token })
         ).Session()
 
-        expect(session).toEqual({
-          token: expect.any(String),
-          user: {
-            email: user.email,
-            id: expect.any(String),
-            role: user.role,
+        expectSession({
+          actual: session,
+          expected: {
+            user,
           },
         })
       })
