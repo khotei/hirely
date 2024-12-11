@@ -8,10 +8,16 @@ datasource db {
 }
 
 model User {
-  id      String   @id @default(uuid(7))
-  email   String   @unique
+  id      String    @id @default(uuid(7))
+  email   String    @unique
   role    UserRole
   resumes Resume[]
+  Vacancy Vacancy[]
+}
+
+enum UserRole {
+  HR
+  CANDIDATE
 }
 
 model Resume {
@@ -23,7 +29,11 @@ model Resume {
   authorId    String
 }
 
-enum UserRole {
-  HR
-  CANDIDATE
+model Vacancy {
+  id          String @id @default(uuid(7))
+  title       String
+  description String
+  salary      Float
+  author      User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
 }

@@ -1,0 +1,110 @@
+extend type Query {
+  vacancy(input: VacancyInput!): VacancyResult!
+  vacancies(input: VacanciesInput): VacanciesResult!
+}
+
+extend type Mutation {
+  createVacancy(input: CreateVacancyInput!): VacancyResult!
+  updateVacancy(input: UpdateVacancyInput!): VacancyResult!
+  deleteVacancy(input: DeleteVacancyInput!): VacancyResult!
+}
+
+type Vacancy {
+  id: ID!
+  title: String!
+  description: String!
+  salary: Float!
+  authorId: ID!
+  author: User!
+}
+
+type VacancyResult {
+  vacancy: Vacancy!
+}
+
+type VacanciesResult {
+  vacancies: [Vacancy!]!
+  pagination: Pagination!
+}
+
+input VacancyInput {
+  id: ID!
+}
+
+input VacanciesInput {
+  id: [ID]
+  pagination: PaginationInput
+}
+
+input CreateVacancyInput {
+  title: String!
+  description: String!
+  salary: Float!
+}
+
+input UpdateVacancyInput {
+  id: ID!
+  title: String
+  description: String
+  salary: Float
+}
+
+input DeleteVacancyInput {
+  id: ID!
+}
+
+# Documents
+
+fragment Vacancy on Vacancy {
+  id
+  title
+  description
+  salary
+  authorId
+  author {
+    ...User
+  }
+}
+
+query Vacancy ($input: VacancyInput!) {
+  vacancy(input: $input) {
+    vacancy {
+      ...Vacancy
+    }
+  }
+}
+
+query Vacancies ($input: VacanciesInput) {
+  vacancies(input: $input) {
+    vacancies {
+      ...Vacancy
+    }
+    pagination {
+      ...Pagination
+    }
+  }
+}
+
+mutation CreateVacancy ($input: CreateVacancyInput!) {
+  createVacancy(input: $input) {
+    vacancy {
+      ...Vacancy
+    }
+  }
+}
+
+mutation UpdateVacancy ($input: UpdateVacancyInput!) {
+  updateVacancy(input: $input) {
+    vacancy {
+      ...Vacancy
+    }
+  }
+}
+
+mutation DeleteVacancy ($input: DeleteVacancyInput!) {
+  deleteVacancy(input: $input) {
+    vacancy {
+      ...Vacancy
+    }
+  }
+}

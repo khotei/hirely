@@ -2,6 +2,7 @@ import {
   type ResumeFragment,
   type SessionFragment,
   type UserFragment,
+  type VacancyFragment,
 } from "@/__generated__/schema"
 
 type DeepPartial<T> = T extends object
@@ -54,6 +55,26 @@ export const expectResume = ({
   actual: ResumeFragment
   author?: UserFragment
   expected: DeepPartial<ResumeFragment>
+}) => {
+  const { id, ...rest } = expected
+  expect(actual).toEqual({
+    id: id ?? expect.any(String),
+    ...rest,
+    author: author ?? expected.author,
+    authorId: author?.id ?? expected.authorId,
+  })
+}
+
+// vacancies
+
+export const expectVacancy = ({
+  actual,
+  author,
+  expected,
+}: {
+  actual: VacancyFragment
+  author?: UserFragment
+  expected: DeepPartial<VacancyFragment>
 }) => {
   const { id, ...rest } = expected
   expect(actual).toEqual({

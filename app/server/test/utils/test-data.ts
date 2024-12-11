@@ -8,6 +8,7 @@ import {
 
 import {
   type CreateResumeInput,
+  CreateVacancyInput,
   getSdk,
   type RegisterInput,
   type SessionFragment,
@@ -116,5 +117,81 @@ export const createTestResumes = async ({
         })
       )
     ).then((res) => res.map(({ resume }) => resume)),
+  }
+}
+
+// vacancies
+
+export const createCreateVacancyInput = (
+  override: Partial<CreateVacancyInput> = {}
+): CreateVacancyInput => {
+  return {
+    description: faker.person.bio(),
+    salary: parseFloat(faker.finance.amount()),
+    title: faker.lorem.paragraphs({ max: 5, min: 2 }),
+    ...override,
+  }
+}
+
+export const createTestVacancy = async ({
+  author,
+  override,
+}: {
+  author?: User
+  override?: Partial<CreateVacancyInput>
+} = {}) => {
+  const createVacancyInput: CreateVacancyInput = {
+    ...createCreateVacancyInput(),
+    ...override,
+  }
+
+  const prisma = new PrismaClient()
+
+  const vacancy = await prisma.vacancy.create({
+    data: {
+      ...createVacancyInput,
+      author: {
+        connect: {
+          id:
+            author?.id ??
+            (
+              await prisma.user.create({
+                data: createRegisterInput(),
+              })
+            ).id,
+        },
+      },
+    },
+    include: { author: true },
+  })
+
+  return {
+    vacancy,
+  }
+}
+
+export const createTestVacancies = async ({
+  author,
+  count,
+  override,
+}: {
+  author?: User
+  count?: number
+  override?:
+    | (() => Partial<CreateVacancyInput>)
+    | Partial<CreateVacancyInput>
+} = {}) => {
+  return {
+    vacancies: await Promise.all(
+      Array.from({ length: count ?? 5 }).map(() =>
+        createTestVacancy({
+          author,
+          override:
+            typeof override === "function"
+              ? override()
+              : override,
+        })
+      )
+    ).then((res) => res.map(({ vacancy }) => vacancy)),
   }
 }

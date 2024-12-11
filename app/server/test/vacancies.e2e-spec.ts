@@ -3,8 +3,8 @@ import { Test, TestingModule } from "@nestjs/testing"
 
 import {
   getSdk,
-  type ResumeFragment,
   type SessionFragment,
+  type VacancyFragment,
 } from "@/__generated__/schema"
 import { AppModule } from "@/app.module"
 import { PrismaService } from "@/common/services/prisma.service"
@@ -13,16 +13,16 @@ import { PAGE_SIZE } from "@/web/common/lib/pagination"
 import { createRequester } from "./lib/requester"
 import {
   expectError,
-  expectResume,
+  expectVacancy,
 } from "./utils/test-asserts"
 import {
-  createCreateResumeInput,
-  createTestResume,
-  createTestResumes,
+  createCreateVacancyInput,
+  createTestVacancies,
+  createTestVacancy,
   registerTestUser,
 } from "./utils/test-data"
 
-describe("Resumes (e2e)", () => {
+describe("Vacancies (e2e)", () => {
   let app: INestApplication
   let prismaService: PrismaService
 
@@ -51,37 +51,37 @@ describe("Resumes (e2e)", () => {
     describe("unauthorized", () => {
       const mutations = [
         {
-          label: "createResume",
+          label: "createVacancy",
           mutation: () =>
-            getSdk(createRequester(app)).CreateResume({
-              input: createCreateResumeInput(),
+            getSdk(createRequester(app)).CreateVacancy({
+              input: createCreateVacancyInput(),
             }),
         },
         {
-          label: "updateResume",
+          label: "updateVacancy",
           mutation: () =>
-            getSdk(createRequester(app)).UpdateResume({
+            getSdk(createRequester(app)).UpdateVacancy({
               input: { id: "fake-id" },
             }),
         },
         {
-          label: "deleteResume",
+          label: "deleteVacancy",
           mutation: () =>
-            getSdk(createRequester(app)).DeleteResume({
+            getSdk(createRequester(app)).DeleteVacancy({
               input: { id: "fake-id" },
             }),
         },
         {
           label: "resume",
           mutation: () =>
-            getSdk(createRequester(app)).Resume({
+            getSdk(createRequester(app)).Vacancy({
               input: { id: "fake-id" },
             }),
         },
         {
-          label: "resumes",
+          label: "vacancies",
           mutation: () =>
-            getSdk(createRequester(app)).Resumes(),
+            getSdk(createRequester(app)).Vacancies(),
         },
       ]
 
@@ -95,34 +95,36 @@ describe("Resumes (e2e)", () => {
       })
     })
 
-    describe("createResume", () => {
+    describe("createVacancy", () => {
       it("create and return resume", async () => {
-        const createResumeInput = createCreateResumeInput()
+        const createVacancyInput =
+          createCreateVacancyInput()
 
         const {
-          createResume: { resume },
+          createVacancy: { vacancy },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).CreateResume({ input: createResumeInput })
+        ).CreateVacancy({ input: createVacancyInput })
 
-        expectResume({
-          actual: resume,
+        expectVacancy({
+          actual: vacancy,
           author: testSession.user,
-          expected: createResumeInput,
+          expected: createVacancyInput,
         })
       })
     })
 
-    describe("updateResume", () => {
+    describe("updateVacancy", () => {
       describe("not found", () => {
-        const createResumeInput = createCreateResumeInput()
-        let randomResume: ResumeFragment
+        const createVacancyInput =
+          createCreateVacancyInput()
+        let randomVacancy: VacancyFragment
 
         beforeEach(async () => {
-          const { resume } = await createTestResume()
-          randomResume = resume
+          const { vacancy } = await createTestVacancy()
+          randomVacancy = vacancy
         })
 
         const mutations = [
@@ -133,10 +135,10 @@ describe("Resumes (e2e)", () => {
                 createRequester(app, {
                   token: testSession.token,
                 })
-              ).UpdateResume({
+              ).UpdateVacancy({
                 input: {
                   id: "not-existed",
-                  ...createResumeInput,
+                  ...createVacancyInput,
                 },
               })
             },
@@ -148,10 +150,10 @@ describe("Resumes (e2e)", () => {
                 createRequester(app, {
                   token: testSession.token,
                 })
-              ).UpdateResume({
+              ).UpdateVacancy({
                 input: {
-                  id: randomResume.id,
-                  ...createResumeInput,
+                  id: randomVacancy.id,
+                  ...createVacancyInput,
                 },
               })
             },
@@ -168,46 +170,47 @@ describe("Resumes (e2e)", () => {
         })
       })
 
-      it("update and return resume", async () => {
+      it("update and return vacancy", async () => {
         const {
-          resume: { id },
-        } = await createTestResume({
+          vacancy: { id },
+        } = await createTestVacancy({
           author: testSession.user,
         })
 
-        const updateResumeInput = createCreateResumeInput()
+        const updateVacancyInput =
+          createCreateVacancyInput()
 
         const {
-          updateResume: { resume },
+          updateVacancy: { vacancy },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).UpdateResume({
+        ).UpdateVacancy({
           input: {
             id,
-            ...updateResumeInput,
+            ...updateVacancyInput,
           },
         })
 
-        expectResume({
-          actual: resume,
+        expectVacancy({
+          actual: vacancy,
           author: testSession.user,
           expected: {
-            ...updateResumeInput,
+            ...updateVacancyInput,
             id,
           },
         })
       })
     })
 
-    describe("deleteResume", () => {
+    describe("deleteVacancy", () => {
       describe("not found", () => {
-        let randomResume: ResumeFragment
+        let randomVacancy: VacancyFragment
 
         beforeEach(async () => {
-          const { resume } = await createTestResume()
-          randomResume = resume
+          const { vacancy } = await createTestVacancy()
+          randomVacancy = vacancy
         })
 
         const mutations = [
@@ -218,7 +221,7 @@ describe("Resumes (e2e)", () => {
                 createRequester(app, {
                   token: testSession.token,
                 })
-              ).DeleteResume({
+              ).DeleteVacancy({
                 input: {
                   id: "not-existed",
                 },
@@ -232,9 +235,9 @@ describe("Resumes (e2e)", () => {
                 createRequester(app, {
                   token: testSession.token,
                 })
-              ).DeleteResume({
+              ).DeleteVacancy({
                 input: {
-                  id: randomResume.id,
+                  id: randomVacancy.id,
                 },
               })
             },
@@ -252,38 +255,38 @@ describe("Resumes (e2e)", () => {
       })
 
       it("delete and return resume", async () => {
-        const { resume } = await createTestResume({
+        const { vacancy } = await createTestVacancy({
           author: testSession.user,
         })
 
         const {
-          deleteResume: { resume: deletedResume },
+          deleteVacancy: { vacancy: deletedVacancy },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).DeleteResume({
+        ).DeleteVacancy({
           input: {
-            id: resume.id,
+            id: vacancy.id,
           },
         })
 
-        expectResume({
-          actual: resume,
-          expected: deletedResume,
+        expectVacancy({
+          actual: vacancy,
+          expected: deletedVacancy,
         })
       })
     })
   })
 
   describe("Query", () => {
-    describe("resume", () => {
+    describe("vacancy", () => {
       describe("not found", () => {
-        let randomResume: ResumeFragment
+        let randomVacancy: VacancyFragment
 
         beforeEach(async () => {
-          const { resume } = await createTestResume()
-          randomResume = resume
+          const { vacancy } = await createTestVacancy()
+          randomVacancy = vacancy
         })
 
         const queries = [
@@ -294,7 +297,7 @@ describe("Resumes (e2e)", () => {
                 createRequester(app, {
                   token: testSession.token,
                 })
-              ).Resume({
+              ).Vacancy({
                 input: {
                   id: "not-existed",
                 },
@@ -308,9 +311,9 @@ describe("Resumes (e2e)", () => {
                 createRequester(app, {
                   token: testSession.token,
                 })
-              ).Resume({
+              ).Vacancy({
                 input: {
-                  id: randomResume.id,
+                  id: randomVacancy.id,
                 },
               })
             },
@@ -327,58 +330,58 @@ describe("Resumes (e2e)", () => {
         })
       })
 
-      it("find and return resume", async () => {
-        const { resume } = await createTestResume({
+      it("find and return vacancy", async () => {
+        const { vacancy } = await createTestVacancy({
           author: testSession.user,
         })
 
         const {
-          resume: { resume: searchedResume },
+          vacancy: { vacancy: searchedVacancy },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).Resume({
+        ).Vacancy({
           input: {
-            id: resume.id,
+            id: vacancy.id,
           },
         })
 
-        expectResume({
-          actual: resume,
-          expected: searchedResume,
+        expectVacancy({
+          actual: vacancy,
+          expected: searchedVacancy,
         })
       })
     })
 
-    describe("resumes", () => {
-      it("return only author's resumes", async () => {
-        const { resumes: randomResumes } =
-          await createTestResumes()
-        const { resumes: userResumes } =
-          await createTestResumes({
+    describe("vacancies", () => {
+      it("return only author's vacancies", async () => {
+        const { vacancies: randomVacancies } =
+          await createTestVacancies()
+        const { vacancies: userVacancies } =
+          await createTestVacancies({
             author: testSession.user,
             count: 7,
           })
 
         const {
-          resumes: {
+          vacancies: {
             pagination: { nextPage, page },
-            resumes,
+            vacancies,
           },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).Resumes()
+        ).Vacancies()
 
-        expect(resumes).not.toEqual(
-          expect.arrayContaining(randomResumes)
+        expect(vacancies).not.toEqual(
+          expect.arrayContaining(randomVacancies)
         )
 
-        expect(resumes).toHaveLength(7)
-        expect(resumes).toEqual(
-          expect.arrayContaining(userResumes)
+        expect(vacancies).toHaveLength(7)
+        expect(vacancies).toEqual(
+          expect.arrayContaining(userVacancies)
         )
 
         expect(page).toEqual(1)
@@ -386,33 +389,33 @@ describe("Resumes (e2e)", () => {
       })
 
       it("returns valid pagination", async () => {
-        await createTestResumes({
+        await createTestVacancies({
           author: testSession.user,
           count: 12,
         })
 
         const {
-          resumes: {
+          vacancies: {
             pagination: firstPagePagination,
-            resumes: firstPageResumes,
+            vacancies: firstPageVacancies,
           },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).Resumes()
+        ).Vacancies()
 
-        expect(firstPageResumes).toHaveLength(PAGE_SIZE)
+        expect(firstPageVacancies).toHaveLength(PAGE_SIZE)
         expect(firstPagePagination.page).toEqual(1)
         expect(firstPagePagination.nextPage).toEqual(2)
 
         const {
-          resumes: { pagination: secondPagePagination },
+          vacancies: { pagination: secondPagePagination },
         } = await getSdk(
           createRequester(app, {
             token: testSession.token,
           })
-        ).Resumes({
+        ).Vacancies({
           input: {
             pagination: {
               page: firstPagePagination.nextPage,

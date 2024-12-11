@@ -13,6 +13,7 @@ import { AuthResolver } from "@/web/auth/auth.resolver"
 import { JWT_SECRET } from "@/web/auth/lib/jwt.constants"
 import { JwtStrategy } from "@/web/auth/passport/jwt.strategy"
 import { ResumesResolver } from "@/web/resumes/resumes.resolver"
+import { VacancyResolver } from "@/web/vacancies/vacancy.resolver"
 
 const auth = {
   modules: [
@@ -26,6 +27,10 @@ const auth = {
 
 const resumes = {
   providers: [ResumesResolver],
+}
+
+const vacancies = {
+  providers: [VacancyResolver],
 }
 
 @Module({
@@ -44,6 +49,7 @@ const resumes = {
     PrismaService,
     ...auth.providers,
     ...resumes.providers,
+    ...vacancies.providers,
   ],
 })
 export class AppModule {}
