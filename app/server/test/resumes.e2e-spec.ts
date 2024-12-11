@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing"
 
 import {
   getSdk,
+  ResumeFragment,
   type SessionFragment,
 } from "@/__generated__/schema"
 import { AppModule } from "@/app.module"
@@ -46,53 +47,54 @@ describe("Resumes (e2e)", () => {
     testSession = await registerTestUser({ app })
   })
 
-  describe("Unauthorized", () => {
-    const fns = [
-      {
-        exec: () =>
-          getSdk(createRequester(app)).CreateResume({
-            input: createCreateResumeInput(),
-          }),
-        label: "createResume",
-      },
-      {
-        exec: () =>
-          getSdk(createRequester(app)).UpdateResume({
-            input: { id: "fake-id" },
-          }),
-        label: "updateResume",
-      },
-      {
-        exec: () =>
-          getSdk(createRequester(app)).DeleteResume({
-            input: { id: "fake-id" },
-          }),
-        label: "deleteResume",
-      },
-      {
-        exec: () =>
-          getSdk(createRequester(app)).Resume({
-            input: { id: "fake-id" },
-          }),
-        label: "resume",
-      },
-      {
-        exec: () => getSdk(createRequester(app)).Resumes(),
-        label: "resumes",
-      },
-    ]
+  describe("Mutation", () => {
+    describe("unauthorized", () => {
+      const mutations = [
+        {
+          label: "createResume",
+          mutation: () =>
+            getSdk(createRequester(app)).CreateResume({
+              input: createCreateResumeInput(),
+            }),
+        },
+        {
+          label: "updateResume",
+          mutation: () =>
+            getSdk(createRequester(app)).UpdateResume({
+              input: { id: "fake-id" },
+            }),
+        },
+        {
+          label: "deleteResume",
+          mutation: () =>
+            getSdk(createRequester(app)).DeleteResume({
+              input: { id: "fake-id" },
+            }),
+        },
+        {
+          label: "resume",
+          mutation: () =>
+            getSdk(createRequester(app)).Resume({
+              input: { id: "fake-id" },
+            }),
+        },
+        {
+          label: "resumes",
+          mutation: () =>
+            getSdk(createRequester(app)).Resumes(),
+        },
+      ]
 
-    fns.forEach(({ exec, label }) => {
-      it(`throw error when ${label} unauthorized`, async () => {
-        await expectError({
-          exec,
-          message: "unauthorized",
+      mutations.forEach(({ label, mutation }) => {
+        it(`throw error when ${label} unauthorized`, async () => {
+          await expectError({
+            exec: mutation,
+            message: "unauthorized",
+          })
         })
       })
     })
-  })
 
-  describe("Mutation", () => {
     describe("createResume", () => {
       it("create and return resume", async () => {
         const createResumeInput = createCreateResumeInput()
@@ -100,7 +102,9 @@ describe("Resumes (e2e)", () => {
         const {
           createResume: { resume },
         } = await getSdk(
-          createRequester(app, { token: testSession.token })
+          createRequester(app, {
+            token: testSession.token,
+          })
         ).CreateResume({ input: createResumeInput })
 
         expectResume({
@@ -112,43 +116,55 @@ describe("Resumes (e2e)", () => {
     })
 
     describe("updateResume", () => {
-      it("throw error when resume does not exist", async () => {
+      describe("not found", () => {
         const createResumeInput = createCreateResumeInput()
+        let randomResume: ResumeFragment
 
-        await expectError({
-          exec: () =>
-            getSdk(
-              createRequester(app, {
-                token: testSession.token,
-              })
-            ).UpdateResume({
-              input: {
-                id: "not-existed",
-                ...createResumeInput,
-              },
-            }),
-          message: "not found",
+        beforeEach(async () => {
+          const { resume } = await createTestResume()
+          randomResume = resume
         })
-      })
 
-      it("throw error when resume does not belong to an user", async () => {
-        const {
-          resume: { id: anotherUserResumeId },
-        } = await createTestResume()
-
-        await expectError({
-          exec: () =>
-            getSdk(
-              createRequester(app, {
-                token: testSession.token,
+        const mutations = [
+          {
+            label: "does not exist",
+            mutation: async () => {
+              await getSdk(
+                createRequester(app, {
+                  token: testSession.token,
+                })
+              ).UpdateResume({
+                input: {
+                  id: "not-existed",
+                  ...createResumeInput,
+                },
               })
-            ).UpdateResume({
-              input: {
-                id: anotherUserResumeId,
-                ...createCreateResumeInput(),
-              },
-            }),
-          message: "not found",
+            },
+          },
+          {
+            label: "belongs to another user",
+            mutation: async () => {
+              await getSdk(
+                createRequester(app, {
+                  token: testSession.token,
+                })
+              ).UpdateResume({
+                input: {
+                  id: randomResume.id,
+                  ...createResumeInput,
+                },
+              })
+            },
+          },
+        ]
+
+        mutations.forEach(({ label, mutation }) => {
+          it(`throw error when resume ${label}`, async () => {
+            await expectError({
+              exec: mutation,
+              message: "not found",
+            })
+          })
         })
       })
 
@@ -186,39 +202,52 @@ describe("Resumes (e2e)", () => {
     })
 
     describe("deleteResume", () => {
-      it("throw error when resume does not exist", async () => {
-        await expectError({
-          exec: () =>
-            getSdk(
-              createRequester(app, {
-                token: testSession.token,
-              })
-            ).DeleteResume({
-              input: {
-                id: "not-existed",
-              },
-            }),
-          message: "not found",
+      describe("not found", () => {
+        let randomResume: ResumeFragment
+
+        beforeEach(async () => {
+          const { resume } = await createTestResume()
+          randomResume = resume
         })
-      })
 
-      it("throw error when resume does not belong to an user", async () => {
-        const {
-          resume: { id: anotherUserResumeId },
-        } = await createTestResume()
-
-        await expectError({
-          exec: () =>
-            getSdk(
-              createRequester(app, {
-                token: testSession.token,
+        const mutations = [
+          {
+            label: "does not exist",
+            mutation: async () => {
+              await getSdk(
+                createRequester(app, {
+                  token: testSession.token,
+                })
+              ).DeleteResume({
+                input: {
+                  id: "not-existed",
+                },
               })
-            ).DeleteResume({
-              input: {
-                id: anotherUserResumeId,
-              },
-            }),
-          message: "not found",
+            },
+          },
+          {
+            label: "belongs to another user",
+            mutation: async () => {
+              await getSdk(
+                createRequester(app, {
+                  token: testSession.token,
+                })
+              ).DeleteResume({
+                input: {
+                  id: randomResume.id,
+                },
+              })
+            },
+          },
+        ]
+
+        mutations.forEach(({ label, mutation }) => {
+          it(`throw error when resume ${label}`, async () => {
+            await expectError({
+              exec: mutation,
+              message: "not found",
+            })
+          })
         })
       })
 
@@ -249,39 +278,52 @@ describe("Resumes (e2e)", () => {
 
   describe("Query", () => {
     describe("resume", () => {
-      it("throw error when resume does not exist", async () => {
-        await expectError({
-          exec: () =>
-            getSdk(
-              createRequester(app, {
-                token: testSession.token,
-              })
-            ).Resume({
-              input: {
-                id: "not-existed",
-              },
-            }),
-          message: "not found",
+      describe("not found", () => {
+        let randomResume: ResumeFragment
+
+        beforeEach(async () => {
+          const { resume } = await createTestResume()
+          randomResume = resume
         })
-      })
 
-      it("throw error when resume does not belong to an user", async () => {
-        const {
-          resume: { id: anotherUserResumeId },
-        } = await createTestResume()
-
-        await expectError({
-          exec: () =>
-            getSdk(
-              createRequester(app, {
-                token: testSession.token,
+        const queries = [
+          {
+            label: "does not exist",
+            query: async () => {
+              await getSdk(
+                createRequester(app, {
+                  token: testSession.token,
+                })
+              ).Resume({
+                input: {
+                  id: "not-existed",
+                },
               })
-            ).Resume({
-              input: {
-                id: anotherUserResumeId,
-              },
-            }),
-          message: "not found",
+            },
+          },
+          {
+            label: "belongs to another user",
+            query: async () => {
+              await getSdk(
+                createRequester(app, {
+                  token: testSession.token,
+                })
+              ).Resume({
+                input: {
+                  id: randomResume.id,
+                },
+              })
+            },
+          },
+        ]
+
+        queries.forEach(({ label, query }) => {
+          it(`throw error when resume ${label}`, async () => {
+            await expectError({
+              exec: query,
+              message: "not found",
+            })
+          })
         })
       })
 
@@ -344,6 +386,11 @@ describe("Resumes (e2e)", () => {
       })
 
       it("returns valid pagination", async () => {
+        await createTestResumes({
+          author: testSession.user,
+          count: 12,
+        })
+
         const {
           resumes: {
             pagination: firstPagePagination,
