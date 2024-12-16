@@ -8,11 +8,13 @@ datasource db {
 }
 
 model User {
-  id      String    @id @default(uuid(7))
-  email   String    @unique
-  role    UserRole
-  resumes Resume[]
-  Vacancy Vacancy[]
+  id              String    @id @default(uuid(7))
+  email           String    @unique
+  role            UserRole
+  resumes         Resume[]
+  vacancy         Vacancy[]
+  matchesSent     Match[]   @relation("MatchesSent")
+  matchesReceived Match[]   @relation("MatchesRecevied")
 }
 
 enum UserRole {
@@ -21,19 +23,44 @@ enum UserRole {
 }
 
 model Resume {
-  id          String @id @default(uuid(7))
+  id          String  @id @default(uuid(7))
   title       String
   description String
   salary      Float
-  author      User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId    String
+  author      User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  matches     Match[]
 }
 
 model Vacancy {
-  id          String @id @default(uuid(7))
+  id          String  @id @default(uuid(7))
   title       String
   description String
   salary      Float
-  author      User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author      User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  matches     Match[]
   authorId    String
+}
+
+model Match {
+  id         String      @id @default(uuid(7))
+  status     MatchStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  deletedAt  DateTime?
+  vacancy    Vacancy     @relation(fields: [vacancyId], references: [id])
+  resume     Resume      @relation(fields: [resumeId], references: [id])
+  sender     User        @relation("MatchesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User        @relation("MatchesRecevied", fields: [receiverId], references: [id], onDelete: Cascade)
+  vacancyId  String
+  resumeId   String
+  senderId   String
+  receiverId String
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED
 }

@@ -8,13 +8,28 @@ import {
 
 import {
   type CreateResumeInput,
-  CreateVacancyInput,
+  type CreateVacancyInput,
   getSdk,
   type RegisterInput,
   type SessionFragment,
 } from "@/__generated__/schema"
 
 import { createRequester } from "../lib/requester"
+
+// user
+
+export const createTestUser = async () => {
+  const prisma = new PrismaClient()
+
+  const user = await prisma.user.create({
+    data: {
+      email: faker.internet.email(),
+      role: faker.helpers.enumValue(UserRole),
+    },
+  })
+
+  return { user }
+}
 
 // auth
 
@@ -42,6 +57,25 @@ export const registerTestUser = async ({
   })
 
   return register
+}
+
+export const loginTestUser = async ({
+  app,
+  user,
+}: {
+  app: INestApplication
+  user?: User
+}): Promise<SessionFragment> => {
+  const { login } = await getSdk(
+    createRequester(app)
+  ).Login({
+    input: {
+      email:
+        user?.email ?? (await createTestUser()).user.email,
+    },
+  })
+
+  return login
 }
 
 // resumes
@@ -193,5 +227,52 @@ export const createTestVacancies = async ({
         })
       )
     ).then((res) => res.map(({ vacancy }) => vacancy)),
+  }
+}
+
+// matches
+
+export const createTestMatch = async () => {
+  const prisma = new PrismaClient()
+
+  const { user: sender } = await createTestUser()
+  const { vacancy } = await createTestVacancy({
+    author: sender,
+  })
+
+  const { user: receiver } = await createTestUser()
+  const { resume } = await createTestResume({
+    author: receiver,
+  })
+
+  const match = await prisma.match.create({
+    data: {
+      receiver: {
+        connect: {
+          id: resume.author.id,
+        },
+      },
+      resume: {
+        connect: { id: resume.id },
+      },
+      sender: {
+        connect: {
+          id: vacancy.author.id,
+        },
+      },
+      vacancy: {
+        connect: { id: vacancy.id },
+      },
+    },
+    include: {
+      receiver: true,
+      resume: true,
+      sender: true,
+      vacancy: true,
+    },
+  })
+
+  return {
+    match,
   }
 }
