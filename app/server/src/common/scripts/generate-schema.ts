@@ -12,7 +12,14 @@ const reqGenConfig: CodegenConfig = {
       config: {
         customResolverFn:
           "(...args: any[]) => Promise<TResult> | TResult",
+        dedupeFragments: true,
         enumsAsTypes: true,
+        scalars: {
+          Date: {
+            input: "Date",
+            output: "Date",
+          },
+        },
         skipTypename: true,
         useIndexSignature: true,
       },

@@ -12,6 +12,7 @@ import { PrismaService } from "@/common/services/prisma.service"
 import { AuthResolver } from "@/web/auth/auth.resolver"
 import { JWT_SECRET } from "@/web/auth/lib/jwt.constants"
 import { JwtStrategy } from "@/web/auth/passport/jwt.strategy"
+import { MatchesResolver } from "@/web/matches/matches.resolver"
 import { ResumesResolver } from "@/web/resumes/resumes.resolver"
 import { VacancyResolver } from "@/web/vacancies/vacancy.resolver"
 
@@ -33,6 +34,10 @@ const vacancies = {
   providers: [VacancyResolver],
 }
 
+const matches = {
+  providers: [MatchesResolver],
+}
+
 @Module({
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -50,6 +55,7 @@ const vacancies = {
     ...auth.providers,
     ...resumes.providers,
     ...vacancies.providers,
+    ...matches.providers,
   ],
 })
 export class AppModule {}
