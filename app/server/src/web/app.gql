@@ -15,6 +15,8 @@ input PaginationInput {
   page: Int!
 }
 
+scalar Date
+
 # Documents
 
 fragment Pagination on Pagination {

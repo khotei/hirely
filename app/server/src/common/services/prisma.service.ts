@@ -14,6 +14,7 @@ export class PrismaService
     return Promise.all([
       this.user.deleteMany(),
       this.resume.deleteMany(),
+      this.match.deleteMany(),
     ])
   }
 

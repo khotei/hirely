@@ -1,4 +1,5 @@
 import {
+  MatchFragment,
   type ResumeFragment,
   type SessionFragment,
   type UserFragment,
@@ -82,5 +83,29 @@ export const expectVacancy = ({
     ...rest,
     author: author ?? expected.author,
     authorId: author?.id ?? expected.authorId,
+  })
+}
+
+// matches
+
+export const expectMatch = ({
+  actual,
+  expected,
+}: {
+  actual: MatchFragment
+  expected: DeepPartial<MatchFragment>
+}) => {
+  const {
+    createdAt = expect.any(String),
+    id = expect.any(String),
+    updatedAt = expect.any(String),
+    ...rest
+  } = expected
+
+  expect(actual).toEqual({
+    createdAt,
+    id,
+    updatedAt,
+    ...rest,
   })
 }

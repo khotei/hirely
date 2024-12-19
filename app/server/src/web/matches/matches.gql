@@ -1,0 +1,132 @@
+extend type Query {
+  match(input: MatchInput!): MatchResult!
+  matches(input: MatchesInput): MatchesResult!
+}
+
+extend type Mutation {
+  createMatch(input: CreateMatchInput!): MatchResult!
+  updateMatch(input: UpdateMatchInput!): MatchResult!
+  unMatch(input: DeleteMatchInput!): MatchResult!
+}
+
+type Match {
+  id: ID!
+  status: MatchStatus!
+  createdAt: Date!
+  updatedAt: Date!
+  vacancy: Vacancy!
+  resume: Resume!
+  sender: User!
+  receiver: User!
+  resumeId: ID!
+  vacancyId: ID!
+  senderId: ID!
+  receiverId: ID!
+}
+
+type MatchResult {
+  match: Match!
+}
+
+type MatchesResult {
+  matches: [Match!]!
+  pagination: Pagination!
+}
+
+input MatchInput {
+  id: ID!
+}
+
+input MatchesInput {
+  id: [ID]
+  pagination: PaginationInput
+}
+
+input CreateMatchInput {
+  vacancyId: ID!
+  resumeId: ID!
+}
+
+input UpdateMatchInput {
+  id: ID!
+  status: MatchStatus
+}
+
+input DeleteMatchInput {
+  id: ID!
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELED
+}
+
+# Documents
+
+fragment Match on Match {
+  id
+  status
+  createdAt
+  updatedAt
+  vacancy {
+    ...Vacancy
+  }
+  resume {
+    ...Resume
+  }
+  sender {
+    ...User
+  }
+  receiver {
+    ...User
+  }
+  vacancyId
+  senderId
+  resumeId
+  receiverId
+}
+
+query Match($input: MatchInput!) {
+  match(input: $input) {
+    match {
+      ...Match
+    }
+  }
+}
+
+query Matches($input: MatchesInput) {
+  matches(input: $input) {
+    matches {
+      ...Match
+    }
+    pagination {
+      ...Pagination
+    }
+  }
+}
+
+mutation CreateMatch($input: CreateMatchInput!) {
+  createMatch(input: $input) {
+    match {
+      ...Match
+    }
+  }
+}
+
+mutation UpdateMatch($input: UpdateMatchInput!) {
+  updateMatch(input: $input) {
+    match {
+      ...Match
+    }
+  }
+}
+
+mutation UnMatch($input: DeleteMatchInput!) {
+  unMatch(input: $input) {
+    match {
+      ...Match
+    }
+  }
+}
