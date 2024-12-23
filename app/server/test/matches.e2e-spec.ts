@@ -14,6 +14,7 @@ import {
   createTestMatch,
   createTestResume,
   createTestResumes,
+  createTestUser,
   createTestVacancies,
   loginTestUser,
 } from "./utils/test-data"
@@ -35,7 +36,10 @@ describe("Matches (e2e)", () => {
     await app.init()
   })
 
-  afterEach(async () => await prismaService.cleanTables())
+  afterEach(async () => {
+    await prismaService.cleanTables()
+    await prismaService.$disconnect()
+  })
 
   describe("Mutation", () => {
     describe("createMatch", () => {
@@ -176,14 +180,169 @@ describe("Matches (e2e)", () => {
 
     describe("updateMatch", () => {
       describe("throw error", () => {
-        it("when user is not participant", async () => {})
-        it("when sender send wrong status", async () => {})
-        it("when receiver send wrong status", async () => {})
+        it("when user is not part of the match", async () => {
+          const { match } = await createTestMatch()
+          const { user } = await createTestUser()
+
+          const { token } = await loginTestUser({
+            app,
+            user,
+          })
+
+          await expectError({
+            exec: () =>
+              getSdk(
+                createRequester(app, { token })
+              ).UpdateMatch({
+                input: {
+                  id: match.id,
+                  status: "ACCEPTED",
+                },
+              }),
+            message: "User is not part of this match",
+          })
+        })
+
+        it("when receiver tries to set status other than ACCEPTED or REJECTED", async () => {
+          const { match } = await createTestMatch()
+          const { token } = await loginTestUser({
+            app,
+            user: match.receiver,
+          })
+
+          await expectError({
+            exec: () =>
+              getSdk(
+                createRequester(app, { token })
+              ).UpdateMatch({
+                input: {
+                  id: match.id,
+                  status: "CANCELED",
+                },
+              }),
+            message: "Only the sender can cancel the match",
+          })
+        })
+
+        it("when sender tries to set status to CANCELED", async () => {
+          const { match } = await createTestMatch()
+          const { token } = await loginTestUser({
+            app,
+            user: match.sender,
+          })
+
+          await expectError({
+            exec: () =>
+              getSdk(
+                createRequester(app, { token })
+              ).UpdateMatch({
+                input: {
+                  id: match.id,
+                  status: "ACCEPTED",
+                },
+              }),
+            message:
+              "Only the receiver can accept or reject the match",
+          })
+        })
+
+        it("when trying to set status to PENDING", async () => {
+          const { match } = await createTestMatch()
+          const { token } = await loginTestUser({
+            app,
+            user: match.receiver,
+          })
+
+          await expectError({
+            exec: () =>
+              getSdk(
+                createRequester(app, { token })
+              ).UpdateMatch({
+                input: {
+                  id: match.id,
+                  status: "PENDING",
+                },
+              }),
+            message:
+              "The status 'PENDING' cannot be set explicitly",
+          })
+        })
       })
 
-      describe("update match with correct status", () => {
-        it("when user is sender", async () => {})
-        it("when user is sender", async () => {})
+      describe("update and return match", () => {
+        it("when receiver updates status to ACCEPTED", async () => {
+          const { match } = await createTestMatch()
+          const { token } = await loginTestUser({
+            app,
+            user: match.receiver,
+          })
+
+          const {
+            updateMatch: { match: updatedMatch },
+          } = await getSdk(
+            createRequester(app, { token })
+          ).UpdateMatch({
+            input: { id: match.id, status: "ACCEPTED" },
+          })
+
+          expectMatch({
+            actual: updatedMatch,
+            expected: {
+              ...match,
+              status: "ACCEPTED",
+              updatedAt: undefined,
+            },
+          })
+        })
+
+        it("when receiver updates status to REJECTED", async () => {
+          const { match } = await createTestMatch()
+          const { token } = await loginTestUser({
+            app,
+            user: match.receiver,
+          })
+
+          const {
+            updateMatch: { match: updatedMatch },
+          } = await getSdk(
+            createRequester(app, { token })
+          ).UpdateMatch({
+            input: { id: match.id, status: "REJECTED" },
+          })
+
+          expectMatch({
+            actual: updatedMatch,
+            expected: {
+              ...match,
+              status: "REJECTED",
+              updatedAt: undefined,
+            },
+          })
+        })
+
+        it("when sender cancels the match", async () => {
+          const { match } = await createTestMatch()
+          const { token } = await loginTestUser({
+            app,
+            user: match.sender,
+          })
+
+          const {
+            updateMatch: { match: updatedMatch },
+          } = await getSdk(
+            createRequester(app, { token })
+          ).UpdateMatch({
+            input: { id: match.id, status: "CANCELED" },
+          })
+
+          expectMatch({
+            actual: updatedMatch,
+            expected: {
+              ...match,
+              status: "CANCELED",
+            },
+          })
+        })
       })
     })
   })

@@ -6,6 +6,7 @@ import {
   type CreateMatchInput,
   type MutationResolvers,
   type QueryResolvers,
+  UpdateMatchInput,
 } from "@/__generated__/schema"
 import { PrismaService } from "@/common/services/prisma.service"
 import {
@@ -15,7 +16,7 @@ import {
 import { JwtSessionGuard } from "@/web/auth/guards/jwt-session.guard"
 
 type Resolvers = Required<
-  Pick<MutationResolvers, "createMatch"> &
+  Pick<MutationResolvers, "createMatch" | "updateMatch"> &
     Pick<QueryResolvers, "matches">
 >
 
@@ -120,6 +121,81 @@ export class MatchesResolver implements Resolvers {
     return {
       matches: [],
       pagination: { nextPage: 2, page: 1 },
+    }
+  }
+
+  @UseGuards(JwtSessionGuard)
+  @Mutation()
+  async updateMatch(
+    @Session()
+    session: SessionPayload,
+    @Args("input") input: UpdateMatchInput
+  ) {
+    const match =
+      await this.prismaService.match.findUniqueOrThrow({
+        include: {
+          receiver: true,
+          sender: true,
+        },
+        where: { id: input.id },
+      })
+
+    if (
+      ![match.receiverId, match.senderId].includes(
+        session.userId
+      )
+    ) {
+      throw new GraphQLError(
+        "User is not part of this match"
+      )
+    }
+
+    if (
+      ["ACCEPTED", "REJECTED"].includes(input.status) &&
+      session.userId !== match.receiverId
+    ) {
+      throw new GraphQLError(
+        "Only the receiver can accept or reject the match"
+      )
+    }
+
+    if (
+      input.status === "CANCELED" &&
+      session.userId !== match.senderId
+    ) {
+      throw new GraphQLError(
+        "Only the sender can cancel the match"
+      )
+    }
+
+    if (input.status === "PENDING") {
+      throw new GraphQLError(
+        "The status 'PENDING' cannot be set explicitly"
+      )
+    }
+
+    const updatedMatch =
+      await this.prismaService.match.update({
+        data: { status: input.status },
+        include: {
+          receiver: true,
+          resume: {
+            include: {
+              author: true,
+            },
+          },
+          sender: true,
+          vacancy: {
+            include: {
+              author: true,
+            },
+          },
+        },
+        where: { id: input.id },
+      })
+
+    return {
+      match: updatedMatch,
     }
   }
 }

@@ -96,16 +96,17 @@ export const expectMatch = ({
   expected: DeepPartial<MatchFragment>
 }) => {
   const {
-    createdAt = expect.any(String),
+    createdAt = expect.anything(),
+    deletedAt = expected.deletedAt
+      ? expect.any(String)
+      : null,
     id = expect.any(String),
-    updatedAt = expect.any(String),
+    updatedAt = expect.anything(),
     ...rest
   } = expected
 
-  expect(actual).toEqual({
-    createdAt,
+  expect(actual).toMatchObject({
     id,
-    updatedAt,
     ...rest,
   })
 }

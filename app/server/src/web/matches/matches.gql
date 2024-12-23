@@ -13,7 +13,8 @@ type Match {
   id: ID!
   status: MatchStatus!
   createdAt: Date!
-  updatedAt: Date!
+  updatedAt: Date
+  deletedAt: Date
   vacancy: Vacancy!
   resume: Resume!
   sender: User!
@@ -70,6 +71,7 @@ fragment Match on Match {
   status
   createdAt
   updatedAt
+  deletedAt
   vacancy {
     ...Vacancy
   }

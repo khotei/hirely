@@ -10,7 +10,7 @@
     "codegen": "npm-run-all --parallel codegen:*",
     "db:push": "prisma db push",
     "dev": "nest start --watch",
-    "test": "node -r tsconfig-paths/register -r ts-node/register ../../node_modules/.bin/jest --runInBand",
+    "test": "node -r tsconfig-paths/register -r ts-node/register ../../node_modules/.bin/jest -i",
     "type-check": "tsc --noEmit",
     "lint": "eslint --fix",
     "build": "nest build",

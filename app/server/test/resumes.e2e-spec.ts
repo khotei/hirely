@@ -41,7 +41,10 @@ describe("Resumes (e2e)", () => {
     await app.init()
   })
 
-  afterEach(async () => await prismaService.cleanTables())
+  afterEach(async () => {
+    await prismaService.cleanTables()
+    await prismaService.$disconnect()
+  })
 
   beforeEach(async () => {
     testSession = await registerTestUser({ app })

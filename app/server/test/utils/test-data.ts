@@ -266,9 +266,17 @@ export const createTestMatch = async () => {
     },
     include: {
       receiver: true,
-      resume: true,
+      resume: {
+        include: {
+          author: true,
+        },
+      },
       sender: true,
-      vacancy: true,
+      vacancy: {
+        include: {
+          author: true,
+        },
+      },
     },
   })
 
