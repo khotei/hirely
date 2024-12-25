@@ -38,6 +38,7 @@ describe("AuthResolver (e2e)", () => {
   afterEach(async () => {
     await prismaService.cleanTables()
     await prismaService.$disconnect()
+    await app.close()
   })
 
   describe("Mutation", () => {

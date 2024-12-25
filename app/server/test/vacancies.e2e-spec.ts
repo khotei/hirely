@@ -44,6 +44,7 @@ describe("Vacancies (e2e)", () => {
   afterEach(async () => {
     await prismaService.cleanTables()
     await prismaService.$disconnect()
+    await app.close()
   })
 
   beforeEach(async () => {

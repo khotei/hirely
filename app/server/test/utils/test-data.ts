@@ -1,10 +1,6 @@
 import { faker } from "@faker-js/faker"
 import type { INestApplication } from "@nestjs/common"
-import {
-  PrismaClient,
-  type User,
-  UserRole,
-} from "@prisma/client"
+import { type User, UserRole } from "@prisma/client"
 
 import {
   type CreateResumeInput,
@@ -16,12 +12,12 @@ import {
 
 import { createRequester } from "../lib/requester"
 
+import { testPrismaClient } from "./prisma-helper"
+
 // user
 
 export const createTestUser = async () => {
-  const prisma = new PrismaClient()
-
-  const user = await prisma.user.create({
+  const user = await testPrismaClient.user.create({
     data: {
       email: faker.internet.email(),
       role: faker.helpers.enumValue(UserRole),
@@ -103,9 +99,7 @@ export const createTestResume = async ({
     ...override,
   }
 
-  const prisma = new PrismaClient()
-
-  const resume = await prisma.resume.create({
+  const resume = await testPrismaClient.resume.create({
     data: {
       ...createResumeInput,
       author: {
@@ -113,7 +107,7 @@ export const createTestResume = async ({
           id:
             author?.id ??
             (
-              await prisma.user.create({
+              await testPrismaClient.user.create({
                 data: createRegisterInput(),
               })
             ).id,
@@ -179,9 +173,7 @@ export const createTestVacancy = async ({
     ...override,
   }
 
-  const prisma = new PrismaClient()
-
-  const vacancy = await prisma.vacancy.create({
+  const vacancy = await testPrismaClient.vacancy.create({
     data: {
       ...createVacancyInput,
       author: {
@@ -189,7 +181,7 @@ export const createTestVacancy = async ({
           id:
             author?.id ??
             (
-              await prisma.user.create({
+              await testPrismaClient.user.create({
                 data: createRegisterInput(),
               })
             ).id,
@@ -233,8 +225,6 @@ export const createTestVacancies = async ({
 // matches
 
 export const createTestMatch = async () => {
-  const prisma = new PrismaClient()
-
   const { user: sender } = await createTestUser()
   const { vacancy } = await createTestVacancy({
     author: sender,
@@ -245,7 +235,7 @@ export const createTestMatch = async () => {
     author: receiver,
   })
 
-  const match = await prisma.match.create({
+  const match = await testPrismaClient.match.create({
     data: {
       receiver: {
         connect: {

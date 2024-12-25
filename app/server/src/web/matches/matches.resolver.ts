@@ -14,6 +14,7 @@ import {
   type SessionPayload,
 } from "@/web/auth/decorators/session.decorator"
 import { JwtSessionGuard } from "@/web/auth/guards/jwt-session.guard"
+import { validateUpdateMatchStatusInput } from "@/web/matches/lib/match-input"
 
 type Resolvers = Required<
   Pick<MutationResolvers, "createMatch" | "updateMatch"> &
@@ -150,29 +151,12 @@ export class MatchesResolver implements Resolvers {
       )
     }
 
-    if (
-      ["ACCEPTED", "REJECTED"].includes(input.status) &&
-      session.userId !== match.receiverId
-    ) {
-      throw new GraphQLError(
-        "Only the receiver can accept or reject the match"
-      )
-    }
-
-    if (
-      input.status === "CANCELED" &&
-      session.userId !== match.senderId
-    ) {
-      throw new GraphQLError(
-        "Only the sender can cancel the match"
-      )
-    }
-
-    if (input.status === "PENDING") {
-      throw new GraphQLError(
-        "The status 'PENDING' cannot be set explicitly"
-      )
-    }
+    validateUpdateMatchStatusInput({
+      receiverId: match.receiverId,
+      senderId: match.senderId,
+      status: input.status,
+      userId: session.userId,
+    })
 
     const updatedMatch =
       await this.prismaService.match.update({
