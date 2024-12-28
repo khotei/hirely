@@ -41,14 +41,14 @@ describe("Vacancies (e2e)", () => {
     await app.init()
   })
 
+  beforeEach(async () => {
+    testSession = await registerTestUser({ app })
+  })
+
   afterEach(async () => {
     await prismaService.cleanTables()
     await prismaService.$disconnect()
     await app.close()
-  })
-
-  beforeEach(async () => {
-    testSession = await registerTestUser({ app })
   })
 
   describe("Mutation", () => {

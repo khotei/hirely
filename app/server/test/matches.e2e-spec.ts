@@ -1,9 +1,13 @@
 import type { INestApplication } from "@nestjs/common"
 import { Test, TestingModule } from "@nestjs/testing"
 
-import { getSdk } from "@/__generated__/schema"
+import {
+  getSdk,
+  type SessionFragment,
+} from "@/__generated__/schema"
 import { AppModule } from "@/app.module"
 import { PrismaService } from "@/common/services/prisma.service"
+import { PAGE_SIZE } from "@/web/common/lib/pagination"
 
 import { createRequester } from "./lib/requester"
 import {
@@ -12,16 +16,20 @@ import {
 } from "./utils/test-asserts"
 import {
   createTestMatch,
+  createTestMatches,
   createTestResume,
   createTestResumes,
   createTestUser,
   createTestVacancies,
   loginTestUser,
+  registerTestUser,
 } from "./utils/test-data"
 
 describe("Matches (e2e)", () => {
   let app: INestApplication
   let prismaService: PrismaService
+
+  let testSession: SessionFragment
 
   beforeEach(async () => {
     const moduleFixture: TestingModule =
@@ -34,6 +42,10 @@ describe("Matches (e2e)", () => {
     prismaService = app.get(PrismaService)
 
     await app.init()
+  })
+
+  beforeEach(async () => {
+    testSession = await registerTestUser({ app })
   })
 
   afterEach(async () => {
@@ -344,6 +356,92 @@ describe("Matches (e2e)", () => {
             },
           })
         })
+      })
+    })
+  })
+
+  describe("Query", () => {
+    describe("matches", () => {
+      it("returns only matches involving the user", async () => {
+        const { matches: unrelatedMatches } =
+          await createTestMatches()
+        const { matches: userRelatedMatches } =
+          await createTestMatches({
+            count: 5,
+            sender: testSession.user,
+          })
+
+        const {
+          matches: {
+            matches,
+            pagination: { nextPage, page },
+          },
+        } = await getSdk(
+          createRequester(app, {
+            token: testSession.token,
+          })
+        ).Matches()
+
+        expect(matches).not.toEqual(
+          expect.arrayContaining(unrelatedMatches)
+        )
+
+        expect(matches).toHaveLength(5)
+        expect(
+          matches.map((match) => match.id)
+        ).toMatchObject(
+          expect.arrayContaining(
+            userRelatedMatches.map((match) => match.id)
+          )
+        )
+
+        expect(page).toEqual(1)
+        expect(nextPage).toBeNull()
+      })
+
+      it("returns valid pagination", async () => {
+        await createTestMatches({
+          count: PAGE_SIZE + 3,
+          sender: testSession.user,
+        })
+
+        const {
+          matches: {
+            matches: firstPageMatches,
+            pagination: firstPagePagination,
+          },
+        } = await getSdk(
+          createRequester(app, {
+            token: testSession.token,
+          })
+        ).Matches()
+
+        expect(firstPageMatches).toHaveLength(PAGE_SIZE)
+        expect(firstPagePagination.page).toEqual(1)
+        expect(firstPagePagination.nextPage).toEqual(2)
+
+        const {
+          matches: {
+            matches: secondPageMatches,
+            pagination: secondPagePagination,
+          },
+        } = await getSdk(
+          createRequester(app, {
+            token: testSession.token,
+          })
+        ).Matches({
+          input: {
+            pagination: {
+              page: firstPagePagination.nextPage,
+            },
+          },
+        })
+
+        expect(secondPageMatches).toHaveLength(3)
+        expect(secondPagePagination.page).toEqual(
+          firstPagePagination.nextPage
+        )
+        expect(secondPagePagination.nextPage).toEqual(null)
       })
     })
   })

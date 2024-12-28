@@ -6,7 +6,6 @@ extend type Query {
 extend type Mutation {
   createMatch(input: CreateMatchInput!): MatchResult!
   updateMatch(input: UpdateMatchInput!): MatchResult!
-  unMatch(input: DeleteMatchInput!): MatchResult!
 }
 
 type Match {
@@ -119,14 +118,6 @@ mutation CreateMatch($input: CreateMatchInput!) {
 
 mutation UpdateMatch($input: UpdateMatchInput!) {
   updateMatch(input: $input) {
-    match {
-      ...Match
-    }
-  }
-}
-
-mutation UnMatch($input: DeleteMatchInput!) {
-  unMatch(input: $input) {
     match {
       ...Match
     }

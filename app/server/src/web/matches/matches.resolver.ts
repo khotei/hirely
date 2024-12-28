@@ -1,9 +1,16 @@
 import { UseGuards } from "@nestjs/common"
-import { Args, Mutation, Resolver } from "@nestjs/graphql"
+import {
+  Args,
+  Mutation,
+  Query,
+  Resolver,
+} from "@nestjs/graphql"
+import { Prisma } from "@prisma/client"
 import { GraphQLError } from "graphql/error"
 
 import {
   type CreateMatchInput,
+  MatchesInput,
   type MutationResolvers,
   type QueryResolvers,
   UpdateMatchInput,
@@ -14,6 +21,12 @@ import {
   type SessionPayload,
 } from "@/web/auth/decorators/session.decorator"
 import { JwtSessionGuard } from "@/web/auth/guards/jwt-session.guard"
+import {
+  calcNextPage,
+  calcPage,
+  calcSkip,
+  PAGE_SIZE,
+} from "@/web/common/lib/pagination"
 import { validateUpdateMatchStatusInput } from "@/web/matches/lib/match-input"
 
 type Resolvers = Required<
@@ -21,6 +34,7 @@ type Resolvers = Required<
     Pick<QueryResolvers, "matches">
 >
 
+// @todo: use guard for alls, and skip when @Public()
 @Resolver()
 export class MatchesResolver implements Resolvers {
   constructor(private prismaService: PrismaService) {}
@@ -118,13 +132,62 @@ export class MatchesResolver implements Resolvers {
     }
   }
 
-  matches() {
+  @UseGuards(JwtSessionGuard)
+  @Query()
+  async matches(
+    @Session()
+    session: SessionPayload,
+    @Args("input")
+    input?: MatchesInput
+  ) {
+    const { userId } = session
+
+    const userMatchesWhere: Prisma.MatchWhereInput = {
+      OR: [{ senderId: userId }, { receiverId: userId }],
+    }
+
+    const page = calcPage({ page: input?.pagination?.page })
+
+    const userMatches =
+      await this.prismaService.match.findMany({
+        include: {
+          receiver: true,
+          resume: {
+            include: {
+              author: true,
+            },
+          },
+          sender: true,
+          vacancy: {
+            include: {
+              author: true,
+            },
+          },
+        },
+        skip: calcSkip({ page }),
+        take: PAGE_SIZE,
+        where: userMatchesWhere,
+      })
+
+    const totalCount = await this.prismaService.match.count(
+      {
+        where: userMatchesWhere,
+      }
+    )
+
+    const nextPage = calcNextPage({
+      page,
+      total: totalCount,
+    })
+
     return {
-      matches: [],
-      pagination: { nextPage: 2, page: 1 },
+      matches: userMatches,
+      pagination: {
+        nextPage,
+        page,
+      },
     }
   }
-
   @UseGuards(JwtSessionGuard)
   @Mutation()
   async updateMatch(

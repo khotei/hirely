@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker"
 import type { INestApplication } from "@nestjs/common"
-import { type User, UserRole } from "@prisma/client"
+import { Prisma, type User, UserRole } from "@prisma/client"
 
 import {
   type CreateResumeInput,
@@ -272,5 +272,79 @@ export const createTestMatch = async () => {
 
   return {
     match,
+  }
+}
+
+export const createTestMatches = async ({
+  count,
+  override,
+  receiver,
+  sender,
+}: {
+  count?: number
+  override?:
+    | (() => Partial<Prisma.MatchCreateInput>)
+    | Partial<Prisma.MatchCreateInput>
+  receiver?: User
+  sender?: User
+} = {}) => {
+  return {
+    matches: await Promise.all(
+      Array.from({ length: count ?? 5 }).map(async () => {
+        const { user: defaultSender } =
+          await createTestUser()
+        const { vacancy } = await createTestVacancy({
+          author: sender ?? defaultSender,
+        })
+
+        const { user: defaultReceiver } =
+          await createTestUser()
+        const { resume } = await createTestResume({
+          author: receiver ?? defaultReceiver,
+        })
+
+        const matchData: Prisma.MatchCreateInput = {
+          receiver: {
+            connect: {
+              id: resume.author.id,
+            },
+          },
+          resume: {
+            connect: { id: resume.id },
+          },
+          sender: {
+            connect: {
+              id: vacancy.author.id,
+            },
+          },
+          vacancy: {
+            connect: { id: vacancy.id },
+          },
+          ...(typeof override === "function"
+            ? override()
+            : override),
+        }
+
+        const match = await testPrismaClient.match.create({
+          data: matchData,
+          include: {
+            receiver: true,
+            resume: {
+              include: {
+                author: true,
+              },
+            },
+            sender: true,
+            vacancy: {
+              include: {
+                author: true,
+              },
+            },
+          },
+        })
+
+        return match
+      })
+    ),
   }
 }
