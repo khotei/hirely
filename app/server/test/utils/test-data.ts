@@ -3,6 +3,7 @@ import type { INestApplication } from "@nestjs/common"
 import { Prisma, type User, UserRole } from "@prisma/client"
 
 import {
+  CreateMatchInput,
   type CreateResumeInput,
   type CreateVacancyInput,
   getSdk,
@@ -224,7 +225,9 @@ export const createTestVacancies = async ({
 
 // matches
 
-export const createTestMatch = async () => {
+export const createTestMatch = async (
+  input: Partial<Prisma.MatchCreateInput> = {}
+) => {
   const { user: sender } = await createTestUser()
   const { vacancy } = await createTestVacancy({
     author: sender,
@@ -237,6 +240,7 @@ export const createTestMatch = async () => {
 
   const match = await testPrismaClient.match.create({
     data: {
+      ...input,
       receiver: {
         connect: {
           id: resume.author.id,

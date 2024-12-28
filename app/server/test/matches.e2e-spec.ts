@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common"
 import { Test, TestingModule } from "@nestjs/testing"
+import { MatchStatus } from "@prisma/client"
 
 import {
   getSdk,
@@ -329,6 +330,36 @@ describe("Matches (e2e)", () => {
               ...match,
               status: "REJECTED",
               updatedAt: undefined,
+            },
+          })
+        })
+
+        it("creates a new match if the previous match is canceled", async () => {
+          const { match } = await createTestMatch({
+            status: "CANCELED",
+          })
+          const { token } = await loginTestUser({
+            app,
+            user: match.sender,
+          })
+
+          const {
+            createMatch: { match: newMatch },
+          } = await getSdk(
+            createRequester(app, { token })
+          ).CreateMatch({
+            input: {
+              resumeId: match.resumeId,
+              vacancyId: match.vacancyId,
+            },
+          })
+
+          expectMatch({
+            actual: newMatch,
+            expected: {
+              ...match,
+              id: expect.any(String),
+              status: MatchStatus.PENDING,
             },
           })
         })

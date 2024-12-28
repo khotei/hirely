@@ -5,7 +5,7 @@ import {
   Query,
   Resolver,
 } from "@nestjs/graphql"
-import { Prisma } from "@prisma/client"
+import { MatchStatus, Prisma } from "@prisma/client"
 import { GraphQLError } from "graphql/error"
 
 import {
@@ -68,9 +68,9 @@ export class MatchesResolver implements Resolvers {
       },
     })
 
-    if (match) {
+    if (match && match.status !== MatchStatus.CANCELED) {
       throw new GraphQLError(
-        "Match with the given vacancyId and resumeId already exist"
+        "Match with the given vacancyId and resumeId already exist and is not cancelled"
       )
     }
 
